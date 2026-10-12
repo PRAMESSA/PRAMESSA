@@ -1,0 +1,1964 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#1a1a2e">
+<title>PRAMESSA Traffic Counting</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+:root{
+--bg-dark:#0f0f1a;--bg-panel:#1a1a2e;--bg-card:#22223a;--bg-hover:#2a2a45;
+--accent:#00d9ff;--accent-dim:#007a99;--success:#00e676;--warning:#ffab00;--danger:#ff5252;
+--text:#e8e8f0;--text-dim:#8888aa;--border:#2a2a45;
+--header-h:8vh;--controls-h:14vh;--vehicle-grid-h:34vh;--direction-h:36vh;
+--gap:1.2vh;--radius:1.2vh;
+--font-xs:1.6vh;--font-sm:2vh;--font-md:2.6vh;--font-lg:3.4vh;--font-xl:4.4vh;
+}
+html,body{height:100%;width:100%;overflow:hidden;background:var(--bg-dark);color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.4}
+.hidden{display:none!important}
+button{font-family:inherit;border:none;cursor:pointer;background:none;color:inherit;transition:background .1s,transform .05s;-webkit-appearance:none}
+button:active{transform:scale(.97)}
+button:disabled{opacity:.4;cursor:not-allowed}
+.btn{display:flex;align-items:center;justify-content:center;gap:.8vh;padding:1.2vh 2.4vh;border-radius:var(--radius);
+font-size:var(--font-sm);font-weight:600;letter-spacing:.02em;border:1px solid var(--border);background:var(--bg-card);
+color:var(--text);white-space:nowrap}
+.btn:hover{background:var(--bg-hover)}
+.btn-primary{background:linear-gradient(135deg,#0066ff,#00d9ff);color:#000;border:none;font-weight:700}
+.btn-success{background:linear-gradient(135deg,#00a854,#00e676);color:#000;border:none;font-weight:700}
+.btn-warning{background:linear-gradient(135deg,#cc8800,#ffab00);color:#000;border:none;font-weight:700}
+.btn-danger{background:linear-gradient(135deg,#cc0000,#ff5252);color:#fff;border:none;font-weight:700}
+.btn-outline{background:transparent;border:1px solid var(--border);color:var(--text)}
+.btn-lg{padding:2vh 4vh;font-size:var(--font-md);border-radius:2vh}
+.btn-xl{padding:2.5vh 6vh;font-size:var(--font-lg);border-radius:2.5vh;font-weight:800}
+
+.screen{position:fixed;inset:0;display:none;width:100%;height:100%;height:100dvh;overflow:hidden}
+.screen.active{display:flex;flex-direction:column}
+
+#screen-setup{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.setup-container{max-width:900px;margin:0 auto;padding:3vh 3vw 6vh;width:100%}
+.setup-header{text-align:center;margin-bottom:3vh}
+.setup-header h1{font-size:clamp(22px,3.5vh,40px);font-weight:800;
+background:linear-gradient(135deg,#00d9ff,#0066ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+background-clip:text;letter-spacing:.04em}
+.setup-header p{font-size:clamp(12px,1.8vh,18px);color:var(--text-dim);margin-top:.8vh}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:2vh 2vw}
+.form-group{display:flex;flex-direction:column;gap:.6vh}
+.form-group.full-width{grid-column:1/-1}
+.form-group label{font-size:clamp(11px,1.6vh,15px);font-weight:600;color:var(--text-dim);letter-spacing:.03em}
+.form-group input,.form-group select,.form-group textarea{width:100%;padding:1.4vh 1.6vh;border-radius:1vh;
+border:1px solid var(--border);background:var(--bg-card);color:var(--text);font-size:clamp(13px,1.9vh,17px);
+font-family:inherit;outline:none;transition:border-color .15s;-webkit-appearance:none;appearance:none}
+.form-group select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238888aa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+background-repeat:no-repeat;background-position:right 1.4vh center;padding-right:4vh}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--accent)}
+.form-group textarea{resize:vertical;min-height:8vh}
+.form-group input[type="date"],.form-group input[type="time"]{color-scheme:dark}
+
+.summary-box{margin-top:2.5vh;padding:2vh 2.5vh;background:var(--bg-panel);border-radius:1.5vh;border:1px solid var(--border)}
+.summary-box h3{font-size:clamp(14px,2vh,20px);color:var(--accent);margin-bottom:1.2vh;font-weight:700}
+.summary-row{display:flex;justify-content:space-between;padding:.7vh 0;font-size:clamp(13px,1.9vh,17px);border-bottom:1px solid rgba(255,255,255,.05)}
+.summary-row:last-child{border-bottom:none}
+.summary-row .label{color:var(--text-dim)}
+.summary-row .value{font-weight:700;color:var(--text)}
+.summary-row .value.accent{color:var(--accent)}
+.summary-row .value.success{color:var(--success)}
+.setup-actions{margin-top:3vh;display:flex;flex-direction:column;gap:1.5vh}
+.setup-actions .btn-xl{width:100%}
+.error-msg{color:var(--danger);font-size:clamp(12px,1.7vh,16px);min-height:2.5vh;text-align:center;font-weight:600}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;
+z-index:1000;padding:3vh;backdrop-filter:blur(4px)}
+.modal-overlay.active{display:flex}
+.modal-box{background:var(--bg-panel);border-radius:2vh;padding:3vh;max-width:500px;width:100%;border:1px solid var(--border);
+max-height:85vh;overflow-y:auto}
+.modal-box h2{font-size:clamp(16px,2.4vh,24px);margin-bottom:1.5vh;color:var(--accent)}
+.modal-box p{font-size:clamp(13px,1.9vh,17px);color:var(--text-dim);margin-bottom:2vh;line-height:1.6}
+.modal-actions{display:flex;gap:1.5vh;flex-wrap:wrap}
+.modal-actions .btn{flex:1;min-width:120px}
+
+#screen-counting{display:none;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;
+padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#screen-counting.active{display:flex}
+.count-header{display:flex;align-items:center;justify-content:space-between;height:var(--header-h);min-height:var(--header-h);
+padding:0 var(--gap);background:var(--bg-panel);border-bottom:1px solid var(--border);flex-shrink:0}
+.count-header .info-block{display:flex;flex-direction:column;gap:.2vh;min-width:0}
+.count-header .info-label{font-size:var(--font-xs);color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.count-header .info-value{font-size:var(--font-sm);font-weight:700;color:var(--text)}
+.count-header .info-value.accent{color:var(--accent)}
+.count-header .info-value.warning{color:var(--warning)}
+.header-center{flex:1;display:flex;flex-direction:column;align-items:center;gap:.2vh;padding:0 var(--gap);min-width:0}
+.header-center .interval-time{font-size:var(--font-md);font-weight:800;color:var(--accent);white-space:nowrap}
+.header-center .interval-remaining{font-size:var(--font-xs);color:var(--text-dim);font-weight:600}
+.header-center .interval-remaining.urgent{color:var(--danger);animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.header-right{display:flex;align-items:center;gap:1vh}
+.storage-indicator{display:flex;align-items:center;gap:.5vh;font-size:var(--font-xs);color:var(--text-dim);font-weight:600}
+.storage-dot{width:1.2vh;height:1.2vh;border-radius:50%;background:var(--success);transition:background .3s}
+.storage-dot.saving{background:var(--warning)}
+.storage-dot.error{background:var(--danger)}
+.header-buttons{display:flex;gap:.8vh}
+.header-buttons .btn{padding:1vh 1.6vh;font-size:var(--font-xs);border-radius:.8vh}
+.count-controls{display:flex;align-items:center;justify-content:center;gap:var(--gap);height:var(--controls-h);
+min-height:var(--controls-h);padding:0 var(--gap);background:var(--bg-dark);border-bottom:1px solid var(--border);flex-shrink:0}
+.count-controls .btn{flex:1;max-width:22vw;height:80%;font-size:var(--font-sm);border-radius:var(--radius);font-weight:700}
+.vehicle-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(2,1fr);gap:var(--gap);
+height:var(--vehicle-grid-h);min-height:var(--vehicle-grid-h);padding:var(--gap);flex-shrink:0}
+.vehicle-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.4vh;
+border-radius:var(--radius);border:2px solid var(--border);background:var(--bg-card);color:var(--text);padding:.6vh;
+position:relative;overflow:hidden;transition:border-color .12s,background .12s}
+.vehicle-btn svg{width:6.5vh;height:6.5vh;max-width:45%;max-height:50%;fill:var(--text-dim);transition:fill .12s;flex-shrink:0}
+.vehicle-btn .v-label{font-size:var(--font-xs);font-weight:700;text-align:center;line-height:1.15;letter-spacing:.02em}
+.vehicle-btn .v-count{font-size:var(--font-sm);font-weight:800;color:var(--accent);position:absolute;top:.6vh;right:.8vh;
+background:rgba(0,217,255,.15);padding:.1vh .6vh;border-radius:.6vh;min-width:2.4vh;text-align:center}
+.vehicle-btn.active{border-color:var(--accent);background:rgba(0,217,255,.12);box-shadow:0 0 2vh rgba(0,217,255,.25)}
+.vehicle-btn.active svg{fill:var(--accent)}
+.vehicle-btn.active .v-label{color:var(--accent)}
+.direction-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--gap);height:var(--direction-h);
+min-height:var(--direction-h);padding:0 var(--gap) var(--gap);flex-shrink:0}
+.direction-btn{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6vh;
+border-radius:var(--radius);border:2px solid var(--border);background:var(--bg-card);color:var(--text);
+position:relative;overflow:hidden;transition:border-color .12s,background .12s}
+.direction-btn svg{width:7vh;height:7vh;max-width:40%;max-height:35%;fill:var(--text-dim);transition:fill .12s;flex-shrink:0}
+.direction-btn .d-label{font-size:var(--font-md);font-weight:800;letter-spacing:.06em;line-height:1}
+.direction-btn .d-count{font-size:var(--font-lg);font-weight:900;color:var(--text);line-height:1}
+.direction-btn .d-total{font-size:var(--font-xs);color:var(--text-dim);font-weight:600}
+.direction-btn.d-straight{border-color:rgba(0,230,118,.4)}
+.direction-btn.d-straight svg{fill:rgba(0,230,118,.6)}
+.direction-btn.d-straight .d-label{color:var(--success)}
+.direction-btn.d-right{border-color:rgba(0,217,255,.4)}
+.direction-btn.d-right svg{fill:rgba(0,217,255,.6)}
+.direction-btn.d-right .d-label{color:var(--accent)}
+.direction-btn.d-left{border-color:rgba(255,171,0,.4)}
+.direction-btn.d-left svg{fill:rgba(255,171,0,.6)}
+.direction-btn.d-left .d-label{color:var(--warning)}
+.direction-btn.flash{animation:flash-bg .15s ease-out}
+@keyframes flash-bg{0%{background:rgba(0,217,255,.35)}100%{background:var(--bg-card)}}
+.direction-btn.flash-straight{animation:flash-green .15s ease-out}
+@keyframes flash-green{0%{background:rgba(0,230,118,.35)}100%{background:var(--bg-card)}}
+.direction-btn.flash-right{animation:flash-blue .15s ease-out}
+@keyframes flash-blue{0%{background:rgba(0,217,255,.35)}100%{background:var(--bg-card)}}
+.direction-btn.flash-left{animation:flash-orange .15s ease-out}
+@keyframes flash-orange{0%{background:rgba(255,171,0,.35)}100%{background:var(--bg-card)}}
+
+.interval-toast{position:fixed;top:12vh;left:50%;transform:translateX(-50%);background:rgba(0,217,255,.95);
+color:#000;padding:1.2vh 3vh;border-radius:1.2vh;font-size:var(--font-sm);font-weight:800;z-index:500;
+pointer-events:none;opacity:0;transition:opacity .3s;white-space:nowrap;box-shadow:0 .5vh 2vh rgba(0,0,0,.5)}
+.interval-toast.show{opacity:1}
+
+.orientation-warning{position:fixed;inset:0;background:var(--bg-dark);display:none;flex-direction:column;
+align-items:center;justify-content:center;z-index:2000;padding:5vh;text-align:center}
+.orientation-warning.active{display:flex}
+.orientation-warning svg{width:20vw;height:20vw;max-width:120px;max-height:120px;fill:var(--warning);
+margin-bottom:3vh;animation:rotate-hint 2s infinite}
+@keyframes rotate-hint{0%,100%{transform:rotate(0)}50%{transform:rotate(90deg)}}
+.orientation-warning h2{font-size:clamp(18px,4vh,32px);color:var(--warning);margin-bottom:1.5vh}
+.orientation-warning p{font-size:clamp(13px,2.2vh,18px);color:var(--text-dim);max-width:400px;line-height:1.6}
+
+#screen-report{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch}
+.report-container{max-width:1100px;margin:0 auto;padding:3vh 3vw 6vh;width:100%}
+.report-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1.5vh;margin-bottom:3vh}
+.report-header h1{font-size:clamp(20px,3vh,32px);font-weight:800;color:var(--accent)}
+.report-actions{display:flex;gap:1vh;flex-wrap:wrap}
+.report-section{background:var(--bg-panel);border-radius:1.5vh;padding:2.5vh;margin-bottom:2.5vh;border:1px solid var(--border)}
+.report-section h2{font-size:clamp(15px,2.2vh,22px);color:var(--accent);margin-bottom:2vh;padding-bottom:1vh;
+border-bottom:1px solid var(--border);font-weight:700}
+.report-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5vh}
+.report-item{display:flex;justify-content:space-between;padding:1vh 1.5vh;background:var(--bg-card);
+border-radius:1vh;font-size:clamp(13px,1.9vh,17px)}
+.report-item .r-label{color:var(--text-dim)}
+.report-item .r-value{font-weight:700}
+.report-item .r-value.accent{color:var(--accent)}
+.report-item .r-value.success{color:var(--success)}
+.report-item .r-value.warning{color:var(--warning)}
+.report-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:1vh;border:1px solid var(--border)}
+.report-table{width:100%;border-collapse:collapse;font-size:clamp(11px,1.5vh,14px);min-width:700px}
+.report-table th,.report-table td{padding:.9vh 1vh;text-align:center;border-bottom:1px solid var(--border);white-space:nowrap}
+.report-table th{background:var(--bg-dark);color:var(--accent);font-weight:700;position:sticky;top:0;font-size:clamp(10px,1.4vh,13px)}
+.report-table td{color:var(--text)}
+.report-table tr:last-child td{border-bottom:none}
+.report-table .total-row td{font-weight:800;background:rgba(0,217,255,.08);color:var(--accent)}
+.report-table .group-header th{background:var(--bg-card);color:var(--text);font-size:clamp(10px,1.3vh,12px);border-bottom:2px solid var(--border)}
+.report-table .sub-header th{background:var(--bg-dark);font-weight:600;font-size:clamp(9px,1.2vh,12px);color:var(--text-dim)}
+.no-data{text-align:center;padding:5vh;color:var(--text-dim);font-size:clamp(14px,2vh,18px)}
+
+@media (orientation:portrait) and (max-width:900px){
+.orientation-warning{display:flex}
+}
+@media (max-height:380px){
+:root{--header-h:10vh;--controls-h:12vh;--vehicle-grid-h:32vh;--direction-h:36vh;--gap:.8vh;
+--font-xs:1.3vh;--font-sm:1.6vh;--font-md:2vh;--font-lg:2.6vh;--font-xl:3.4vh}
+.vehicle-btn svg{width:4.5vh;height:4.5vh}
+.direction-btn svg{width:5vh;height:5vh}
+}
+@media (max-width:700px){.form-grid{grid-template-columns:1fr}}
+@media print{.report-actions{display:none}#screen-report{overflow:visible;height:auto}}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-track{background:var(--bg-dark)}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent-dim)}
+
+/* Ekspor menu */
+.export-menu{position:absolute;top:100%;right:0;background:var(--bg-panel);border:1px solid var(--border);
+border-radius:1vh;padding:.5vh;z-index:100;display:none;min-width:200px;box-shadow:0 1vh 3vh rgba(0,0,0,.5)}
+.export-menu.active{display:block}
+.export-menu button{display:block;width:100%;text-align:left;padding:1.2vh 1.6vh;font-size:clamp(12px,1.7vh,15px);
+border-radius:.6vh;color:var(--text)}
+.export-menu button:hover{background:var(--bg-hover)}
+.export-menu button:disabled{opacity:.4;cursor:not-allowed}
+.export-menu .menu-sep{height:1px;background:var(--border);margin:.5vh 0}
+.export-wrap{position:relative;display:inline-block}
+</style>
+</head>
+<body>
+
+<div class="orientation-warning" id="orientationWarning">
+<svg viewBox="0 0 24 24"><path d="M16 1H8C6.34 1 5 2.34 5 4v16c0 1.66 1.34 3 3 3h8c1.66 0 3-1.34 3-3V4c0-1.66-1.34-3-3-3zm-2 20h-4v-1h4v1zm3.25-3H6.75V4h10.5v14z"/></svg>
+<h2>Putar Perangkat</h2>
+<p>Untuk pengalaman pencatatan terbaik, gunakan orientasi <strong>landscape</strong> (horizontal).</p>
+</div>
+
+<div class="screen active" id="screen-setup">
+<div class="setup-container">
+<div class="setup-header">
+<h1>PRAMESSA Traffic Counting</h1>
+<p>Pengaturan Survei Pencatatan Lalu Lintas</p>
+</div>
+<div class="form-grid">
+<div class="form-group full-width">
+<label for="inputNamaSurvei">Nama Survei *</label>
+<input type="text" id="inputNamaSurvei" placeholder="Contoh: Survei Lalu Lintas Pagi" autocomplete="off">
+</div>
+<div class="form-group full-width">
+<label for="inputLokasi">Lokasi Survei *</label>
+<input type="text" id="inputLokasi" placeholder="Contoh: Simpang Empat Jalan Merdeka" autocomplete="off">
+</div>
+<div class="form-group">
+<label for="inputTanggal">Tanggal Survei *</label>
+<input type="date" id="inputTanggal">
+</div>
+<div class="form-group">
+<label for="inputSurveyor">Nama Surveyor *</label>
+<input type="text" id="inputSurveyor" placeholder="Nama lengkap surveyor" autocomplete="off">
+</div>
+<div class="form-group">
+<label for="inputJamMulai">Jam Mulai (24 jam) *</label>
+<input type="time" id="inputJamMulai" value="07:00">
+</div>
+<div class="form-group">
+<label for="inputJamSelesai">Jam Selesai (24 jam) *</label>
+<input type="time" id="inputJamSelesai" value="09:00">
+</div>
+<div class="form-group">
+<label for="inputInterval">Interval Pencatatan *</label>
+<select id="inputInterval">
+<option value="1">1 menit</option>
+<option value="5" selected>5 menit</option>
+<option value="10">10 menit</option>
+<option value="15">15 menit</option>
+<option value="30">30 menit</option>
+<option value="custom">Interval khusus</option>
+</select>
+</div>
+<div class="form-group hidden" id="groupIntervalCustom">
+<label for="inputIntervalCustom">Jumlah Menit Khusus *</label>
+<input type="number" id="inputIntervalCustom" min="1" max="1440" value="5" placeholder="Contoh: 7">
+</div>
+<div class="form-group full-width">
+<label for="inputKeterangan">Keterangan Tambahan (opsional)</label>
+<textarea id="inputKeterangan" placeholder="Catatan kondisi cuaca, hambatan, atau informasi lain..." rows="2"></textarea>
+</div>
+</div>
+
+<div class="summary-box" id="summaryBox">
+<h3>Ringkasan Survei</h3>
+<div class="summary-row"><span class="label">Durasi Survei</span><span class="value accent" id="sumDurasi">120 menit</span></div>
+<div class="summary-row"><span class="label">Jumlah Interval</span><span class="value success" id="sumInterval">24 interval</span></div>
+<div class="summary-row"><span class="label">Interval Pencatatan</span><span class="value" id="sumIntervalDur">5 menit</span></div>
+<div class="summary-row"><span class="label">Periode</span><span class="value" id="sumPeriode">07:00 – 09:00</span></div>
+</div>
+
+<div class="error-msg" id="setupError"></div>
+
+<div class="setup-actions">
+<button class="btn btn-primary btn-xl" id="btnMulaiSurvei">▶ MULAI SURVEI</button>
+<div id="existingSurveyActions" class="hidden" style="display:flex;flex-direction:column;gap:1.5vh;">
+<button class="btn btn-success btn-lg" id="btnLanjutkanSurvei">↩ LANJUTKAN SURVEI AKTIF</button>
+<button class="btn btn-outline btn-lg" id="btnHapusSurveiLama">🗑 HAPUS SURVEI LAMA & MULAI BARU</button>
+</div>
+<button class="btn btn-outline btn-lg" id="btnKeLaporanDariSetup">📊 BUKA LAPORAN</button>
+</div>
+</div>
+</div>
+
+<div class="screen" id="screen-counting">
+<div class="count-header">
+<div class="info-block" style="flex:1;min-width:0;">
+<span class="info-label truncate" id="hdrLokasi">Lokasi</span>
+<span class="info-value truncate" id="hdrTanggal">Tanggal</span>
+</div>
+<div class="header-center">
+<span class="interval-time" id="hdrIntervalTime">--:-- – --:--</span>
+<span class="interval-remaining" id="hdrIntervalRemaining">Sisa: --:--</span>
+</div>
+<div class="header-right">
+<div class="storage-indicator">
+<span class="storage-dot" id="storageDot"></span>
+<span id="storageText">Tersimpan</span>
+</div>
+<div class="header-buttons">
+<button class="btn btn-outline" id="btnJeda" title="Jeda / Lanjut">⏸</button>
+<button class="btn btn-outline" id="btnLaporan" title="Laporan">📊</button>
+</div>
+</div>
+</div>
+
+<div class="count-controls">
+<button class="btn btn-danger" id="btnUndo" title="Batalkan input terakhir">↩ UNDO</button>
+<button class="btn btn-warning" id="btnGantiInterval" title="Ganti interval sekarang">⏭ INTERVAL</button>
+<button class="btn btn-outline" id="btnToggleAudio" title="Audio on/off">🔊 AUDIO</button>
+<button class="btn btn-outline" id="btnKeluar" title="Kembali ke pengaturan">⚙ PENGATURAN</button>
+</div>
+
+<div class="vehicle-grid" id="vehicleGrid"></div>
+<div class="direction-grid" id="directionGrid"></div>
+<div class="interval-toast" id="intervalToast"></div>
+</div>
+
+<div class="screen" id="screen-report">
+<div class="report-container">
+<div class="report-header">
+<h1>Laporan Survei</h1>
+<div class="report-actions">
+<button class="btn btn-outline" id="btnKembaliDariLaporan">← Kembali</button>
+<div class="export-wrap">
+<button class="btn btn-primary" id="btnEksporXLSX">📥 Ekspor XLSX</button>
+</div>
+<div class="export-wrap">
+<button class="btn btn-primary" id="btnEksporCSVMenu">📄 Ekspor CSV ▾</button>
+<div class="export-menu" id="csvMenu">
+<button data-csv="interval">Data Interval</button>
+<button data-csv="vehicle">Rekap Jenis Kendaraan</button>
+<button data-csv="direction">Rekap Arah Pergerakan</button>
+<button data-csv="identity">Identitas Survei</button>
+</div>
+</div>
+<button class="btn btn-success" id="btnEksporJSON">💾 Ekspor JSON</button>
+<button class="btn btn-warning" id="btnImporJSON">📂 Impor JSON</button>
+<input type="file" id="fileInputJSON" accept=".json" class="hidden">
+</div>
+</div>
+<div id="reportContent"></div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modalConfirm">
+<div class="modal-box">
+<h2 id="modalTitle">Konfirmasi</h2>
+<p id="modalMessage">Apakah Anda yakin?</p>
+<div class="modal-actions">
+<button class="btn btn-outline" id="modalBtnCancel">Batal</button>
+<button class="btn btn-danger" id="modalBtnConfirm">Ya, Lanjutkan</button>
+</div>
+</div>
+</div>
+
+<div class="modal-overlay" id="modalInfo">
+<div class="modal-box">
+<h2 id="modalInfoTitle">Informasi</h2>
+<p id="modalInfoMessage"></p>
+<div class="modal-actions">
+<button class="btn btn-primary" id="modalInfoBtnOk" style="flex:1;">OK</button>
+</div>
+</div>
+</div>
+
+<script>
+/* ============================================================
+   TRAFFIC COUNTING OFFLINE - SINGLE FILE APPLICATION
+   ============================================================ */
+(function() {
+'use strict';
+
+/* ===== KONSTANTA ===== */
+const VEHICLES = [
+    { id: 'sepeda', label: 'Sepeda', short: 'SPD' },
+    { id: 'motor', label: 'Motor', short: 'MTR' },
+    { id: 'roda_tiga', label: 'Roda Tiga', short: 'R3' },
+    { id: 'mobil', label: 'Mobil', short: 'MBL' },
+    { id: 'pickup', label: 'Pickup', short: 'PKP' },
+    { id: 'truk', label: 'Truk', short: 'TRK' }
+];
+const DIRECTIONS = [
+    { id: 'lurus', label: 'LURUS', short: 'LR' },
+    { id: 'kanan', label: 'KANAN', short: 'KN' },
+    { id: 'kiri', label: 'KIRI', short: 'KR' }
+];
+const STORAGE_KEYS = {
+    SURVEY_CONFIG: 'tc_survey_config',
+    SURVEY_DATA: 'tc_survey_data'
+};
+const DB_NAME = 'traffic_counting_db';
+const DB_VERSION = 1;
+const STORE_CONFIG = 'config';
+const STORE_DATA = 'data';
+
+/* ===== STATE ===== */
+let state = {
+    surveyConfig: null,
+    intervals: [],
+    activeIntervalIndex: 0,
+    activeVehicle: 'motor',
+    undoStack: [],
+    isPaused: false,
+    audioEnabled: true,
+    storageMode: 'localStorage',
+    db: null,
+    storageStatus: 'saved',
+    intervalTimer: null,
+    audioCtx: null,
+    surveyActive: false
+};
+
+/* ===== UTIL ===== */
+function createEmptyVehicleCounts() {
+    const c = {};
+    VEHICLES.forEach(v => {
+        c[v.id] = {};
+        DIRECTIONS.forEach(d => c[v.id][d.id] = 0);
+    });
+    return c;
+}
+function parseTimeToMinutes(t) {
+    const [h, m] = t.split(':').map(Number);
+    return h * 60 + m;
+}
+function formatTimeShort(date) {
+    const h = String(date.getHours()).padStart(2, '0');
+    const m = String(date.getMinutes()).padStart(2, '0');
+    return h + ':' + m;
+}
+function getLocalDateStr(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+}
+function formatDuration(minutes) {
+    if (minutes < 60) return minutes + ' menit';
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    if (m === 0) return h + ' jam';
+    return h + ' jam ' + m + ' menit';
+}
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ===== AUDIO ===== */
+function getAudioContext() {
+    if (!state.audioCtx) {
+        try { state.audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+        catch (e) { return null; }
+    }
+    if (state.audioCtx.state === 'suspended') state.audioCtx.resume();
+    return state.audioCtx;
+}
+function playTone(freq, dur, type, vol) {
+    if (!state.audioEnabled) return;
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    try {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type || 'sine';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(vol || 0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(ctx.currentTime); osc.stop(ctx.currentTime + dur);
+    } catch (e) {}
+}
+function playInputSound(dir) {
+    if (dir === 'lurus') playTone(880, .08, 'sine', .12);
+    else if (dir === 'kanan') playTone(1046, .08, 'sine', .12);
+    else if (dir === 'kiri') playTone(1318, .08, 'sine', .12);
+    else playTone(880, .08, 'sine', .12);
+}
+function playErrorSound() {
+    playTone(200, .15, 'sawtooth', .1);
+    setTimeout(() => playTone(150, .15, 'sawtooth', .1), 160);
+}
+function playIntervalSound() {
+    playTone(1200, .1, 'sine', .15);
+    setTimeout(() => playTone(1600, .1, 'sine', .15), 120);
+    setTimeout(() => playTone(2000, .15, 'sine', .15), 240);
+}
+function playUndoSound() {
+    playTone(600, .08, 'sine', .1);
+    setTimeout(() => playTone(400, .1, 'sine', .1), 90);
+}
+
+/* ===== INDEXEDDB ===== */
+function openDB() {
+    return new Promise((resolve, reject) => {
+        if (!window.indexedDB) return reject('No IDB');
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = e => {
+            const db = e.target.result;
+            if (!db.objectStoreNames.contains(STORE_CONFIG)) db.createObjectStore(STORE_CONFIG, { keyPath: 'key' });
+            if (!db.objectStoreNames.contains(STORE_DATA)) db.createObjectStore(STORE_DATA, { keyPath: 'key' });
+        };
+        req.onsuccess = e => resolve(e.target.result);
+        req.onerror = e => reject(e.target.error);
+    });
+}
+async function idbGet(store, key) {
+    return new Promise((resolve, reject) => {
+        if (!state.db) return resolve(null);
+        try {
+            const tx = state.db.transaction(store, 'readonly');
+            const req = tx.objectStore(store).get(key);
+            req.onsuccess = () => resolve(req.result || null);
+            req.onerror = () => reject(req.error);
+        } catch (e) { reject(e); }
+    });
+}
+async function idbPut(store, val) {
+    return new Promise((resolve, reject) => {
+        if (!state.db) return reject('No DB');
+        try {
+            const tx = state.db.transaction(store, 'readwrite');
+            const req = tx.objectStore(store).put(val);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        } catch (e) { reject(e); }
+    });
+}
+async function idbDelete(store, key) {
+    return new Promise((resolve, reject) => {
+        if (!state.db) return reject('No DB');
+        try {
+            const tx = state.db.transaction(store, 'readwrite');
+            const req = tx.objectStore(store).delete(key);
+            req.onsuccess = () => resolve();
+            req.onerror = () => reject(req.error);
+        } catch (e) { reject(e); }
+    });
+}
+
+/* ===== STORAGE ===== */
+async function saveConfig(config) {
+    if (state.storageMode === 'indexedDB' && state.db) {
+        try { await idbPut(STORE_CONFIG, { key: 'surveyConfig', value: config }); return; }
+        catch (e) { /* fallback */ }
+    }
+    localStorage.setItem(STORAGE_KEYS.SURVEY_CONFIG, JSON.stringify(config));
+}
+async function loadConfig() {
+    if (state.storageMode === 'indexedDB' && state.db) {
+        try {
+            const r = await idbGet(STORE_CONFIG, 'surveyConfig');
+            if (r) return r.value;
+        } catch (e) {}
+    }
+    const raw = localStorage.getItem(STORAGE_KEYS.SURVEY_CONFIG);
+    if (raw) { try { return JSON.parse(raw); } catch (e) { return null; } }
+    return null;
+}
+async function saveSurveyData() {
+    state.storageStatus = 'saving';
+    updateStorageIndicator();
+    const data = {
+        key: 'surveyData',
+        config: state.surveyConfig,
+        intervals: state.intervals,
+        activeIntervalIndex: state.activeIntervalIndex,
+        activeVehicle: state.activeVehicle,
+        undoStack: state.undoStack.slice(-50),
+        isPaused: state.isPaused,
+        audioEnabled: state.audioEnabled,
+        timestamp: Date.now()
+    };
+    try {
+        if (state.storageMode === 'indexedDB' && state.db) {
+            await idbPut(STORE_DATA, data);
+        } else {
+            localStorage.setItem(STORAGE_KEYS.SURVEY_DATA, JSON.stringify(data));
+        }
+        state.storageStatus = 'saved';
+    } catch (e) {
+        try {
+            localStorage.setItem(STORAGE_KEYS.SURVEY_DATA, JSON.stringify(data));
+            state.storageStatus = 'saved';
+        } catch (e2) {
+            state.storageStatus = 'error';
+        }
+    }
+    updateStorageIndicator();
+}
+async function loadSurveyData() {
+    let data = null;
+    if (state.storageMode === 'indexedDB' && state.db) {
+        try {
+            const r = await idbGet(STORE_DATA, 'surveyData');
+            if (r) data = r;
+        } catch (e) {}
+    }
+    if (!data) {
+        const raw = localStorage.getItem(STORAGE_KEYS.SURVEY_DATA);
+        if (raw) { try { data = JSON.parse(raw); } catch (e) { data = null; } }
+    }
+    return data;
+}
+async function deleteSurveyData() {
+    if (state.storageMode === 'indexedDB' && state.db) {
+        try { await idbDelete(STORE_DATA, 'surveyData'); } catch (e) {}
+    }
+    localStorage.removeItem(STORAGE_KEYS.SURVEY_DATA);
+}
+
+/* ===== INTERVALS ===== */
+function generateIntervals(config) {
+    const intervals = [];
+    const startMin = parseTimeToMinutes(config.jamMulai);
+    const endMin = parseTimeToMinutes(config.jamSelesai);
+    const intervalMin = config.intervalMinutes;
+    const baseDate = new Date(config.tanggal + 'T00:00:00');
+    let current = startMin, index = 0;
+    while (current < endMin) {
+        const next = Math.min(current + intervalMin, endMin);
+        const startTime = new Date(baseDate); startTime.setMinutes(current);
+        const endTime = new Date(baseDate); endTime.setMinutes(next);
+        intervals.push({
+            index: index,
+            startTime: startTime.getTime(),
+            endTime: endTime.getTime(),
+            actualEndTime: null,
+            status: 'pending',
+            counts: createEmptyVehicleCounts(),
+            total: 0
+        });
+        current = next; index++;
+    }
+    return intervals;
+}
+function formatIntervalTime(s, e) {
+    return formatTimeShort(new Date(s)) + ' – ' + formatTimeShort(new Date(e));
+}
+function getActiveInterval() {
+    if (!state.intervals || state.activeIntervalIndex >= state.intervals.length) return null;
+    return state.intervals[state.activeIntervalIndex];
+}
+function getIntervalRemainingMs() {
+    const a = getActiveInterval();
+    if (!a) return 0;
+    return Math.max(0, a.endTime - Date.now());
+}
+
+/* ===== UI HELPERS ===== */
+const $ = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+function showScreen(id) {
+    $$('.screen').forEach(s => s.classList.remove('active'));
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    setTimeout(checkOrientation, 100);
+}
+function showToast(msg, dur) {
+    const t = $('#intervalToast');
+    if (!t) return;
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._t);
+    t._t = setTimeout(() => t.classList.remove('show'), dur || 2000);
+}
+function updateStorageIndicator() {
+    const dot = $('#storageDot'), txt = $('#storageText');
+    if (!dot || !txt) return;
+    dot.className = 'storage-dot';
+    if (state.storageStatus === 'saving') { dot.classList.add('saving'); txt.textContent = 'Menyimpan...'; }
+    else if (state.storageStatus === 'error') { dot.classList.add('error'); txt.textContent = 'Gagal simpan'; }
+    else txt.textContent = 'Tersimpan';
+}
+function checkOrientation() {
+    const w = $('#orientationWarning');
+    const isPortrait = window.innerHeight > window.innerWidth;
+    const isSmall = window.innerWidth < 700;
+    if (isPortrait && isSmall && $('#screen-counting').classList.contains('active')) {
+        w.classList.add('active');
+    } else {
+        w.classList.remove('active');
+    }
+}
+
+/* ===== VEHICLE BUTTONS ===== */
+function getVehicleSVG(id) {
+    const s = {
+        sepeda: `<svg viewBox="0 0 64 64"><circle cx="16" cy="44" r="10" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="48" cy="44" r="10" fill="none" stroke="currentColor" stroke-width="3"/><path d="M16 44 L28 24 L44 24 L48 44" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M28 24 L36 44" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="18" r="3" fill="currentColor"/></svg>`,
+        motor: `<svg viewBox="0 0 64 64"><circle cx="16" cy="44" r="9" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="48" cy="44" r="9" fill="none" stroke="currentColor" stroke-width="3"/><path d="M16 44 L26 30 L40 30 L48 44" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M30 30 L34 22 L42 22" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/><rect x="38" y="18" width="10" height="4" rx="2" fill="currentColor"/></svg>`,
+        roda_tiga: `<svg viewBox="0 0 64 64"><circle cx="14" cy="44" r="8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="32" cy="48" r="8" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="44" r="8" fill="none" stroke="currentColor" stroke-width="3"/><path d="M14 44 L26 28 L40 28 L50 44" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><rect x="28" y="20" width="12" height="8" rx="3" fill="currentColor"/></svg>`,
+        mobil: `<svg viewBox="0 0 64 64"><rect x="8" y="28" width="48" height="18" rx="6" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 28 L24 16 L40 16 L46 28" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><circle cx="20" cy="46" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="44" cy="46" r="6" fill="none" stroke="currentColor" stroke-width="3"/></svg>`,
+        pickup: `<svg viewBox="0 0 64 64"><rect x="8" y="28" width="48" height="18" rx="5" fill="none" stroke="currentColor" stroke-width="3"/><path d="M18 28 L22 18 L34 18 L38 28" fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><rect x="36" y="24" width="20" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="20" cy="46" r="6" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="44" cy="46" r="6" fill="none" stroke="currentColor" stroke-width="3"/></svg>`,
+        truk: `<svg viewBox="0 0 64 64"><rect x="6" y="24" width="36" height="22" rx="4" fill="none" stroke="currentColor" stroke-width="3"/><rect x="42" y="30" width="16" height="16" rx="3" fill="none" stroke="currentColor" stroke-width="3"/><path d="M42 30 L46 22 L54 22 L58 30" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="14" cy="46" r="5" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="30" cy="46" r="5" fill="none" stroke="currentColor" stroke-width="3"/><circle cx="50" cy="46" r="5" fill="none" stroke="currentColor" stroke-width="3"/></svg>`
+    };
+    return s[id] || s.mobil;
+}
+function getDirectionSVG(id) {
+    if (id === 'lurus') return `<svg viewBox="0 0 24 24"><path d="M12 2 L12 22 M12 2 L7 7 M12 2 L17 7" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    if (id === 'kanan') return `<svg viewBox="0 0 24 24"><path d="M12 22 L12 10 Q12 6 16 6 L20 6 M20 6 L16 2 M20 6 L16 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    return `<svg viewBox="0 0 24 24"><path d="M12 22 L12 10 Q12 6 8 6 L4 6 M4 6 L8 2 M4 6 L8 10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+}
+function buildVehicleButtons() {
+    const grid = $('#vehicleGrid');
+    grid.innerHTML = '';
+    VEHICLES.forEach(v => {
+        const btn = document.createElement('button');
+        btn.className = 'vehicle-btn';
+        btn.dataset.vehicle = v.id;
+        btn.innerHTML = `<span class="v-count" data-count="${v.id}">0</span>${getVehicleSVG(v.id)}<span class="v-label">${v.label}</span>`;
+        btn.addEventListener('click', () => selectVehicle(v.id));
+        grid.appendChild(btn);
+    });
+}
+function buildDirectionButtons() {
+    const grid = $('#directionGrid');
+    grid.innerHTML = '';
+    DIRECTIONS.forEach(d => {
+        const btn = document.createElement('button');
+        btn.className = 'direction-btn d-' + d.id;
+        btn.dataset.direction = d.id;
+        btn.innerHTML = `${getDirectionSVG(d.id)}<span class="d-label">${d.label}</span><span class="d-count" data-dir-count="${d.id}">0</span><span class="d-total" data-dir-total="${d.id}">Total: 0</span>`;
+        btn.addEventListener('click', () => recordCount(d.id));
+        grid.appendChild(btn);
+    });
+}
+function selectVehicle(id) {
+    state.activeVehicle = id;
+    $$('.vehicle-btn').forEach(b => b.classList.toggle('active', b.dataset.vehicle === id));
+    playTone(660, .05, 'sine', .08);
+    saveSurveyData();
+}
+function recordCount(dir) {
+    if (state.isPaused) { playErrorSound(); showToast('Survei dijeda'); return; }
+    const active = getActiveInterval();
+    if (!active) { playErrorSound(); showToast('Tidak ada interval aktif'); return; }
+    const vId = state.activeVehicle;
+    if (!vId) { playErrorSound(); showToast('Pilih kendaraan'); return; }
+    active.counts[vId][dir]++;
+    active.total++;
+    state.undoStack.push({ intervalIndex: state.activeIntervalIndex, vehicleId: vId, direction: dir, ts: Date.now() });
+    if (state.undoStack.length > 100) state.undoStack.shift();
+    updateCountingUI();
+    flashDirectionButton(dir);
+    playInputSound(dir);
+    saveSurveyData();
+}
+function flashDirectionButton(dir) {
+    const btn = document.querySelector(`.direction-btn[data-direction="${dir}"]`);
+    if (!btn) return;
+    const cls = 'flash-' + dir;
+    btn.classList.remove('flash', 'flash-straight', 'flash-right', 'flash-left');
+    void btn.offsetWidth;
+    btn.classList.add('flash', cls);
+    setTimeout(() => btn.classList.remove('flash', cls), 200);
+}
+function undoLastInput() {
+    if (state.undoStack.length === 0) { playErrorSound(); showToast('Tidak ada yang bisa dibatalkan'); return; }
+    const last = state.undoStack.pop();
+    const interval = state.intervals[last.intervalIndex];
+    if (!interval) return;
+    if (interval.counts[last.vehicleId][last.direction] > 0) {
+        interval.counts[last.vehicleId][last.direction]--;
+        interval.total = Math.max(0, interval.total - 1);
+    }
+    updateCountingUI();
+    playUndoSound();
+    showToast('Input dibatalkan');
+    saveSurveyData();
+}
+function updateCountingUI() {
+    const active = getActiveInterval();
+    if (!active) return;
+    VEHICLES.forEach(v => {
+        const el = document.querySelector(`[data-count="${v.id}"]`);
+        if (el) {
+            const tot = DIRECTIONS.reduce((s, d) => s + (active.counts[v.id][d.id] || 0), 0);
+            el.textContent = tot;
+        }
+    });
+    DIRECTIONS.forEach(d => {
+        let tot = 0;
+        VEHICLES.forEach(v => tot += active.counts[v.id][d.id] || 0);
+        const el = document.querySelector(`[data-dir-count="${d.id}"]`);
+        if (el) el.textContent = tot;
+        const elT = document.querySelector(`[data-dir-total="${d.id}"]`);
+        if (elT) elT.textContent = 'Total: ' + tot;
+    });
+    updateHeaderInfo();
+}
+function updateHeaderInfo() {
+    if (!state.surveyConfig) return;
+    $('#hdrLokasi').textContent = state.surveyConfig.lokasi;
+    $('#hdrTanggal').textContent = state.surveyConfig.tanggal;
+    const active = getActiveInterval();
+    if (active) $('#hdrIntervalTime').textContent = formatIntervalTime(active.startTime, active.endTime);
+    updateIntervalRemaining();
+}
+function updateIntervalRemaining() {
+    const el = $('#hdrIntervalRemaining');
+    if (!el) return;
+    if (state.isPaused) { el.textContent = '⏸ DIJEDA'; el.classList.add('urgent'); return; }
+    el.classList.remove('urgent');
+    const a = getActiveInterval();
+    if (!a) { el.textContent = '—'; return; }
+    const rem = getIntervalRemainingMs();
+    if (rem <= 0) { el.textContent = 'Mengganti...'; el.classList.add('urgent'); return; }
+    const s = Math.ceil(rem / 1000);
+    const m = Math.floor(s / 60);
+    const sec = s % 60;
+    el.textContent = 'Sisa: ' + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
+    if (rem < 30000) el.classList.add('urgent');
+}
+
+/* ===== INTERVAL MANAGEMENT ===== */
+function checkAndAdvanceInterval() {
+    if (!state.intervals || !state.intervals.length) return;
+    if (state.isPaused) return;
+    const active = getActiveInterval();
+    if (!active) return;
+    const now = Date.now();
+    if (now >= active.endTime) {
+        active.status = 'completed';
+        active.actualEndTime = active.endTime;
+        let nextIdx = state.activeIntervalIndex + 1;
+        let found = false;
+        while (nextIdx < state.intervals.length) {
+            const n = state.intervals[nextIdx];
+            if (now >= n.startTime && now < n.endTime) {
+                state.activeIntervalIndex = nextIdx;
+                n.status = 'active';
+                found = true; break;
+            } else if (now < n.startTime) {
+                state.activeIntervalIndex = nextIdx;
+                n.status = 'active';
+                found = true; break;
+            }
+            n.status = 'skipped';
+            nextIdx++;
+        }
+        if (!found) {
+            active.status = 'completed';
+            state.activeIntervalIndex = state.intervals.length - 1;
+            showToast('Survei selesai');
+            pauseSurvey();
+            return;
+        }
+        updateCountingUI();
+        playIntervalSound();
+        showToast('Interval baru: ' + formatIntervalTime(
+            state.intervals[state.activeIntervalIndex].startTime,
+            state.intervals[state.activeIntervalIndex].endTime));
+        saveSurveyData();
+    }
+}
+function manualAdvanceInterval() {
+    const a = getActiveInterval();
+    if (!a) return;
+    a.status = 'completed';
+    a.actualEndTime = Date.now();
+    let nextIdx = state.activeIntervalIndex + 1;
+    if (nextIdx >= state.intervals.length) { showToast('Interval terakhir'); return; }
+    const now = Date.now();
+    while (nextIdx < state.intervals.length && now >= state.intervals[nextIdx].endTime) {
+        state.intervals[nextIdx].status = 'skipped';
+        nextIdx++;
+    }
+    if (nextIdx >= state.intervals.length) { showToast('Tidak ada interval berikutnya'); return; }
+    state.activeIntervalIndex = nextIdx;
+    state.intervals[nextIdx].status = 'active';
+    updateCountingUI();
+    playIntervalSound();
+    showToast('Interval diganti manual');
+    saveSurveyData();
+}
+function pauseSurvey() {
+    state.isPaused = true;
+    $('#btnJeda').textContent = '▶';
+    $('#btnJeda').classList.remove('btn-outline');
+    $('#btnJeda').classList.add('btn-warning');
+    updateIntervalRemaining();
+    showToast('Survei dijeda');
+    saveSurveyData();
+}
+function resumeSurvey() {
+    state.isPaused = false;
+    $('#btnJeda').textContent = '⏸';
+    $('#btnJeda').classList.remove('btn-warning');
+    $('#btnJeda').classList.add('btn-outline');
+    updateIntervalRemaining();
+    showToast('Survei dilanjutkan');
+    saveSurveyData();
+}
+function startTimers() {
+    stopTimers();
+    state.intervalTimer = setInterval(() => {
+        updateIntervalRemaining();
+        checkAndAdvanceInterval();
+    }, 500);
+}
+function stopTimers() {
+    if (state.intervalTimer) { clearInterval(state.intervalTimer); state.intervalTimer = null; }
+}
+
+/* ===== SURVEY START ===== */
+async function startSurvey(config) {
+    state.surveyConfig = config;
+    state.intervals = generateIntervals(config);
+    state.activeIntervalIndex = 0;
+    state.activeVehicle = 'motor';
+    state.undoStack = [];
+    state.isPaused = false;
+    state.surveyActive = true;
+    if (state.intervals.length) {
+        const now = Date.now();
+        let idx = 0;
+        while (idx < state.intervals.length && now >= state.intervals[idx].endTime) {
+            state.intervals[idx].status = 'skipped'; idx++;
+        }
+        if (idx >= state.intervals.length) idx = state.intervals.length - 1;
+        state.activeIntervalIndex = idx;
+        state.intervals[idx].status = 'active';
+    }
+    await saveConfig(config);
+    await saveSurveyData();
+    buildVehicleButtons();
+    buildDirectionButtons();
+    selectVehicle('motor');
+    updateCountingUI();
+    updateHeaderInfo();
+    showScreen('screen-counting');
+    startTimers();
+}
+
+/* ===== SETUP FORM ===== */
+function updateSummary() {
+    const jm = $('#inputJamMulai').value;
+    const js = $('#inputJamSelesai').value;
+    const iv = $('#inputInterval').value;
+    const cv = parseInt($('#inputIntervalCustom').value) || 0;
+    let im = 5;
+    if (iv === 'custom') im = cv > 0 ? cv : 5; else im = parseInt(iv) || 5;
+    if (jm && js) {
+        const s = parseTimeToMinutes(jm), e = parseTimeToMinutes(js);
+        if (e > s) {
+            const d = e - s;
+            $('#sumDurasi').textContent = formatDuration(d);
+            $('#sumInterval').textContent = Math.ceil(d / im) + ' interval';
+            $('#sumIntervalDur').textContent = im + ' menit';
+            $('#sumPeriode').textContent = jm + ' – ' + js;
+        } else {
+            $('#sumDurasi').textContent = '—';
+            $('#sumInterval').textContent = '—';
+            $('#sumIntervalDur').textContent = im + ' menit';
+            $('#sumPeriode').textContent = 'Jam selesai harus lebih besar';
+        }
+    }
+}
+function validateSetup() {
+    const nama = $('#inputNamaSurvei').value.trim();
+    const lokasi = $('#inputLokasi').value.trim();
+    const tanggal = $('#inputTanggal').value;
+    const jm = $('#inputJamMulai').value;
+    const js = $('#inputJamSelesai').value;
+    const surveyor = $('#inputSurveyor').value.trim();
+    const iv = $('#inputInterval').value;
+    const cv = parseInt($('#inputIntervalCustom').value) || 0;
+    if (!nama) return 'Nama survei harus diisi.';
+    if (!lokasi) return 'Lokasi survei harus diisi.';
+    if (!tanggal) return 'Tanggal survei harus diisi.';
+    if (!jm) return 'Jam mulai harus diisi.';
+    if (!js) return 'Jam selesai harus diisi.';
+    if (!surveyor) return 'Nama surveyor harus diisi.';
+    const s = parseTimeToMinutes(jm), e = parseTimeToMinutes(js);
+    if (e <= s) return 'Jam selesai harus lebih besar daripada jam mulai.';
+    let im = 5;
+    if (iv === 'custom') {
+        if (cv < 1) return 'Interval khusus minimal 1 menit.';
+        if (cv > 1440) return 'Interval khusus maksimal 1440 menit.';
+        im = cv;
+    } else im = parseInt(iv);
+    if (e - s < im) return 'Durasi survei lebih pendek dari interval.';
+    return null;
+}
+function buildConfigFromForm() {
+    const iv = $('#inputInterval').value;
+    let im = 5;
+    if (iv === 'custom') im = parseInt($('#inputIntervalCustom').value) || 5;
+    else im = parseInt(iv) || 5;
+    return {
+        nama: $('#inputNamaSurvei').value.trim(),
+        lokasi: $('#inputLokasi').value.trim(),
+        tanggal: $('#inputTanggal').value,
+        jamMulai: $('#inputJamMulai').value,
+        jamSelesai: $('#inputJamSelesai').value,
+        intervalMinutes: im,
+        surveyor: $('#inputSurveyor').value.trim(),
+        keterangan: $('#inputKeterangan').value.trim(),
+        createdAt: Date.now()
+    };
+}
+function fillFormFromConfig(c) {
+    if (!c) return;
+    $('#inputNamaSurvei').value = c.nama || '';
+    $('#inputLokasi').value = c.lokasi || '';
+    $('#inputTanggal').value = c.tanggal || '';
+    $('#inputJamMulai').value = c.jamMulai || '07:00';
+    $('#inputJamSelesai').value = c.jamSelesai || '09:00';
+    $('#inputSurveyor').value = c.surveyor || '';
+    $('#inputKeterangan').value = c.keterangan || '';
+    const presets = [1, 5, 10, 15, 30];
+    if (presets.includes(c.intervalMinutes)) {
+        $('#inputInterval').value = String(c.intervalMinutes);
+        $('#groupIntervalCustom').classList.add('hidden');
+    } else {
+        $('#inputInterval').value = 'custom';
+        $('#inputIntervalCustom').value = c.intervalMinutes;
+        $('#groupIntervalCustom').classList.remove('hidden');
+    }
+    updateSummary();
+}
+
+/* ===== REPORT ===== */
+function renderReport() {
+    const container = $('#reportContent');
+    if (!state.surveyConfig) {
+        container.innerHTML = '<div class="no-data">Belum ada data survei.</div>';
+        return;
+    }
+    const c = state.surveyConfig;
+    const intervals = state.intervals || [];
+    let totalAll = 0;
+    const tV = {}, tD = {};
+    VEHICLES.forEach(v => tV[v.id] = 0);
+    DIRECTIONS.forEach(d => tD[d.id] = 0);
+    intervals.forEach(iv => {
+        VEHICLES.forEach(v => {
+            DIRECTIONS.forEach(d => {
+                const n = (iv.counts[v.id] && iv.counts[v.id][d.id]) || 0;
+                tV[v.id] += n; tD[d.id] += n; totalAll += n;
+            });
+        });
+    });
+    let html = '';
+    html += `<div class="report-section"><h2>A. Identitas Survei</h2><div class="report-grid">
+    <div class="report-item"><span class="r-label">Nama Survei</span><span class="r-value accent">${escapeHtml(c.nama)}</span></div>
+    <div class="report-item"><span class="r-label">Lokasi</span><span class="r-value">${escapeHtml(c.lokasi)}</span></div>
+    <div class="report-item"><span class="r-label">Tanggal</span><span class="r-value">${c.tanggal}</span></div>
+    <div class="report-item"><span class="r-label">Jam Mulai</span><span class="r-value">${c.jamMulai}</span></div>
+    <div class="report-item"><span class="r-label">Jam Selesai</span><span class="r-value">${c.jamSelesai}</span></div>
+    <div class="report-item"><span class="r-label">Interval</span><span class="r-value">${c.intervalMinutes} menit</span></div>
+    <div class="report-item"><span class="r-label">Surveyor</span><span class="r-value">${escapeHtml(c.surveyor)}</span></div>
+    ${c.keterangan ? `<div class="report-item" style="grid-column:1/-1;"><span class="r-label">Keterangan</span><span class="r-value">${escapeHtml(c.keterangan)}</span></div>` : ''}
+    </div></div>`;
+    html += `<div class="report-section"><h2>B. Rekap Jenis Kendaraan</h2><div class="report-grid">
+    ${VEHICLES.map(v => `<div class="report-item"><span class="r-label">${v.label}</span><span class="r-value accent">${tV[v.id]}</span></div>`).join('')}
+    <div class="report-item" style="grid-column:1/-1;background:rgba(0,217,255,.1);"><span class="r-label" style="font-weight:700;color:var(--accent);">TOTAL</span><span class="r-value accent" style="font-size:1.3em;">${totalAll}</span></div>
+    </div></div>`;
+    html += `<div class="report-section"><h2>C. Rekap Pergerakan</h2><div class="report-grid">
+    ${DIRECTIONS.map(d => `<div class="report-item"><span class="r-label">Total ${d.label}</span><span class="r-value ${d.id === 'lurus' ? 'success' : d.id === 'kanan' ? 'accent' : 'warning'}">${tD[d.id]}</span></div>`).join('')}
+    </div></div>`;
+    if (intervals.length) {
+        html += `<div class="report-section"><h2>D. Rekap Interval</h2><div class="report-table-wrap"><table class="report-table">
+        <thead><tr class="group-header"><th rowspan="2">No</th><th rowspan="2">Waktu</th><th colspan="6">Jenis Kendaraan</th><th rowspan="2">Total</th></tr>
+        <tr class="sub-header">${VEHICLES.map(v => `<th>${v.short}</th>`).join('')}</tr></thead><tbody>`;
+        intervals.forEach((iv, idx) => {
+            const st = new Date(iv.startTime);
+            const en = iv.actualEndTime ? new Date(iv.actualEndTime) : new Date(iv.endTime);
+            const ts = formatTimeShort(st) + ' – ' + formatTimeShort(en);
+            let rTot = 0;
+            const vTot = {};
+            VEHICLES.forEach(v => {
+                let s = 0;
+                DIRECTIONS.forEach(d => s += (iv.counts[v.id] && iv.counts[v.id][d.id]) || 0);
+                vTot[v.id] = s; rTot += s;
+            });
+            html += `<tr><td>${idx + 1}</td><td>${ts}</td>${VEHICLES.map(v => `<td>${vTot[v.id]}</td>`).join('')}<td style="font-weight:700;">${rTot}</td></tr>`;
+        });
+        html += `</tbody><tfoot><tr class="total-row"><td colspan="2">TOTAL</td>${VEHICLES.map(v => `<td>${tV[v.id]}</td>`).join('')}<td>${totalAll}</td></tr></tfoot></table></div></div>`;
+    }
+    html += `<div class="report-section"><h2>E. Total Keseluruhan</h2><div class="report-grid">
+    <div class="report-item" style="grid-column:1/-1;text-align:center;padding:2.5vh;">
+    <span class="r-label" style="font-size:1.2em;">TOTAL SELURUH KENDARAAN</span>
+    <span class="r-value accent" style="font-size:2em;">${totalAll}</span></div></div></div>`;
+    container.innerHTML = html;
+}
+
+/* ============================================================
+   MINI ZIP WRITER (STORE, NO COMPRESSION)
+   ============================================================ */
+const MiniZip = (function() {
+    let crcTable = null;
+    function makeTable() {
+        const t = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) {
+            let c = n;
+            for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+            t[n] = c >>> 0;
+        }
+        return t;
+    }
+    function crc32(bytes) {
+        if (!crcTable) crcTable = makeTable();
+        let crc = 0xFFFFFFFF;
+        for (let i = 0; i < bytes.length; i++) {
+            crc = (crc >>> 8) ^ crcTable[(crc ^ bytes[i]) & 0xFF];
+        }
+        return (crc ^ 0xFFFFFFFF) >>> 0;
+    }
+    function strToU8(str) {
+        const out = [];
+        for (let i = 0; i < str.length; i++) {
+            let c = str.charCodeAt(i);
+            if (c < 0x80) out.push(c);
+            else if (c < 0x800) out.push(0xC0 | (c >> 6), 0x80 | (c & 0x3F));
+            else if (c >= 0xD800 && c <= 0xDBFF && i + 1 < str.length) {
+                const c2 = str.charCodeAt(i + 1);
+                if (c2 >= 0xDC00 && c2 <= 0xDFFF) {
+                    const cp = 0x10000 + ((c - 0xD800) << 10) + (c2 - 0xDC00);
+                    out.push(0xF0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3F), 0x80 | ((cp >> 6) & 0x3F), 0x80 | (cp & 0x3F));
+                    i++;
+                } else out.push(0xEF, 0xBF, 0xBD);
+            } else out.push(0xE0 | (c >> 12), 0x80 | ((c >> 6) & 0x3F), 0x80 | (c & 0x3F));
+        }
+        return new Uint8Array(out);
+    }
+    function u16(n) { return [n & 0xFF, (n >>> 8) & 0xFF]; }
+    function u32(n) { return [n & 0xFF, (n >>> 8) & 0xFF, (n >>> 16) & 0xFF, (n >>> 24) & 0xFF]; }
+    function build(files) {
+        const localParts = [], centralParts = [];
+        let offset = 0;
+        for (const f of files) {
+            const nameBytes = strToU8(f.name);
+            const crc = crc32(f.data);
+            const size = f.data.length;
+            const local = []
+                .concat(u32(0x04034b50))
+                .concat(u16(20))
+                .concat(u16(0x0800))
+                .concat(u16(0))
+                .concat(u16(0))
+                .concat(u16(0x21))
+                .concat(u32(crc))
+                .concat(u32(size))
+                .concat(u32(size))
+                .concat(u16(nameBytes.length))
+                .concat(u16(0));
+            localParts.push(new Uint8Array(local), nameBytes, f.data);
+            const central = []
+                .concat(u32(0x02014b50))
+                .concat(u16(20))
+                .concat(u16(20))
+                .concat(u16(0x0800))
+                .concat(u16(0))
+                .concat(u16(0))
+                .concat(u16(0x21))
+                .concat(u32(crc))
+                .concat(u32(size))
+                .concat(u32(size))
+                .concat(u16(nameBytes.length))
+                .concat(u16(0))
+                .concat(u16(0))
+                .concat(u16(0))
+                .concat(u16(0))
+                .concat(u32(0))
+                .concat(u32(offset));
+            centralParts.push(new Uint8Array(central), nameBytes);
+            offset += local.length + nameBytes.length + size;
+        }
+        let cSize = 0;
+        for (const p of centralParts) cSize += p.length;
+        const eocd = []
+            .concat(u32(0x06054b50))
+            .concat(u16(0))
+            .concat(u16(0))
+            .concat(u16(files.length))
+            .concat(u16(files.length))
+            .concat(u32(cSize))
+            .concat(u32(offset))
+            .concat(u16(0));
+        let total = 0;
+        for (const p of localParts) total += p.length;
+        for (const p of centralParts) total += p.length;
+        total += eocd.length;
+        const out = new Uint8Array(total);
+        let pos = 0;
+        for (const p of localParts) { out.set(p, pos); pos += p.length; }
+        for (const p of centralParts) { out.set(p, pos); pos += p.length; }
+        out.set(new Uint8Array(eocd), pos);
+        return out;
+    }
+    return { build, strToU8 };
+})();
+
+/* ============================================================
+   XLSX BUILDER (OFFICE OPEN XML)
+   ============================================================ */
+const XLSXBuilder = (function() {
+    function esc(str) {
+        if (str === null || str === undefined) return '';
+        return String(str)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+    }
+    function colLetter(idx) {
+        let s = ''; idx++;
+        while (idx > 0) {
+            const r = (idx - 1) % 26;
+            s = String.fromCharCode(65 + r) + s;
+            idx = Math.floor((idx - 1) / 26);
+        }
+        return s;
+    }
+    function buildSheetXml(rows, cols) {
+        let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+        xml += '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
+        xml += ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n';
+        if (cols && cols.length) {
+            xml += '<cols>\n';
+            cols.forEach((w, i) => {
+                xml += `<col min="${i+1}" max="${i+1}" width="${w}" customWidth="1"/>\n`;
+            });
+            xml += '</cols>\n';
+        }
+        xml += '<sheetData>\n';
+        rows.forEach((row, rIdx) => {
+            xml += `<row r="${rIdx + 1}">\n`;
+            row.forEach((cell, cIdx) => {
+                if (cell === null || cell === undefined) return;
+                const ref = colLetter(cIdx) + (rIdx + 1);
+                const type = cell.t || (typeof cell.v === 'number' ? 'n' : 's');
+                const styleAttr = cell.s !== undefined ? ` s="${cell.s}"` : '';
+                if (type === 'n') {
+                    const num = Number(cell.v);
+                    const val = isNaN(num) ? 0 : num;
+                    xml += `<c r="${ref}"${styleAttr}><v>${val}</v></c>\n`;
+                } else if (type === 'b') {
+                    xml += `<c r="${ref}"${styleAttr} t="b"><v>${cell.v ? 1 : 0}</v></c>\n`;
+                } else {
+                    xml += `<c r="${ref}"${styleAttr} t="inlineStr"><is><t xml:space="preserve">${esc(cell.v)}</t></is></c>\n`;
+                }
+            });
+            xml += '</row>\n';
+        });
+        xml += '</sheetData>\n';
+        if (rows.length > 1) {
+            const maxCol = Math.max(...rows.map(r => r.length));
+            if (maxCol > 0) {
+                const lastCol = colLetter(maxCol - 1);
+                xml += `<autoFilter ref="A1:${lastCol}${rows.length}"/>\n`;
+            }
+        }
+        xml += '</worksheet>';
+        return xml;
+    }
+    function buildStylesXml(styles) {
+        let fontsXml = `<fonts count="${styles.length}">`;
+        styles.forEach(s => {
+            const f = s.font || {};
+            fontsXml += '<font>';
+            if (f.bold) fontsXml += '<b/>';
+            if (f.italic) fontsXml += '<i/>';
+            fontsXml += `<sz val="${f.size || 11}"/>`;
+            if (f.color) fontsXml += `<color rgb="FF${f.color.replace('#','')}"/>`;
+            else fontsXml += '<color theme="1"/>';
+            fontsXml += '<name val="Calibri"/><family val="2"/></font>';
+        });
+        fontsXml += '</fonts>';
+        let fillsXml = `<fills count="${styles.length + 2}">`;
+        fillsXml += '<fill><patternFill patternType="none"/></fill>';
+        fillsXml += '<fill><patternFill patternType="gray125"/></fill>';
+        styles.forEach(s => {
+            const f = s.fill || {};
+            if (f.color) {
+                fillsXml += `<fill><patternFill patternType="solid"><fgColor rgb="FF${f.color.replace('#','')}"/><bgColor indexed="64"/></patternFill></fill>`;
+            } else {
+                fillsXml += '<fill><patternFill patternType="none"/></fill>';
+            }
+        });
+        fillsXml += '</fills>';
+        const bordersXml = '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>';
+        let cellXfs = `<cellXfs count="${styles.length}">`;
+        styles.forEach((s, i) => {
+            const align = s.align || 'left';
+            let numFmtId = 0;
+            if (s.numFmt === '0') numFmtId = 1;
+            cellXfs += `<xf numFmtId="${numFmtId}" fontId="${i}" fillId="${i + 2}" borderId="0" xfId="0" applyFont="1" applyFill="1" applyAlignment="1">`;
+            cellXfs += `<alignment horizontal="${align}" vertical="center" wrapText="0"/>`;
+            cellXfs += '</xf>';
+        });
+        cellXfs += '</cellXfs>';
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+            '<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+            fontsXml + fillsXml + bordersXml + cellXfs + '</styleSheet>';
+    }
+    function buildWorkbookXml(names) {
+        let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+        xml += '<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"';
+        xml += ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">\n<sheets>\n';
+        names.forEach((n, i) => {
+            xml += `<sheet name="${esc(n)}" sheetId="${i + 1}" r:id="rId${i + 1}"/>\n`;
+        });
+        xml += '</sheets>\n</workbook>';
+        return xml;
+    }
+    function buildWorkbookRels(names) {
+        let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+        xml += '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n';
+        names.forEach((n, i) => {
+            xml += `<Relationship Id="rId${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${i + 1}.xml"/>\n`;
+        });
+        xml += `<Relationship Id="rId${names.length + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>\n`;
+        xml += '</Relationships>';
+        return xml;
+    }
+    function buildContentTypes(count) {
+        let xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n';
+        xml += '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">';
+        xml += '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>';
+        xml += '<Default Extension="xml" ContentType="application/xml"/>';
+        xml += '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>';
+        for (let i = 0; i < count; i++) {
+            xml += `<Override PartName="/xl/worksheets/sheet${i + 1}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`;
+        }
+        xml += '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>';
+        xml += '</Types>';
+        return xml;
+    }
+    function buildRootRels() {
+        return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+            '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+            '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>' +
+            '</Relationships>';
+    }
+    function build(sheets, styles) {
+        const names = sheets.map(s => s.name);
+        const files = [];
+        files.push({ name: '[Content_Types].xml', data: MiniZip.strToU8(buildContentTypes(sheets.length)) });
+        files.push({ name: '_rels/.rels', data: MiniZip.strToU8(buildRootRels()) });
+        files.push({ name: 'xl/workbook.xml', data: MiniZip.strToU8(buildWorkbookXml(names)) });
+        files.push({ name: 'xl/_rels/workbook.xml.rels', data: MiniZip.strToU8(buildWorkbookRels(names)) });
+        files.push({ name: 'xl/styles.xml', data: MiniZip.strToU8(buildStylesXml(styles)) });
+        sheets.forEach((s, i) => {
+            files.push({ name: `xl/worksheets/sheet${i + 1}.xml`, data: MiniZip.strToU8(buildSheetXml(s.rows, s.cols)) });
+        });
+        return MiniZip.build(files);
+    }
+    return { build };
+})();
+
+/* ============================================================
+   HELPER: SANITASI NAMA FILE
+   ============================================================ */
+function sanitizeFilename(str) {
+    if (!str) return 'survei';
+    return String(str)
+        .replace(/[^a-zA-Z0-9_\-]/g, '_')
+        .replace(/_+/g, '_')
+        .replace(/^_|_$/g, '')
+        .substring(0, 60) || 'survei';
+}
+function getBaseFilename() {
+    const c = state.surveyConfig;
+    const loc = sanitizeFilename(c ? c.lokasi : 'survei');
+    const tgl = (c && c.tanggal) ? c.tanggal : getLocalDateStr(new Date());
+    return 'Traffic_Counting_' + loc + '_' + tgl;
+}
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+/* ============================================================
+   DATA AGGREGATION
+   ============================================================ */
+function computeTotals() {
+    const intervals = state.intervals || [];
+    let totalAll = 0;
+    const tV = {}, tD = {};
+    VEHICLES.forEach(v => tV[v.id] = 0);
+    DIRECTIONS.forEach(d => tD[d.id] = 0);
+    intervals.forEach(iv => {
+        VEHICLES.forEach(v => {
+            DIRECTIONS.forEach(d => {
+                const n = (iv.counts[v.id] && iv.counts[v.id][d.id]) || 0;
+                tV[v.id] += n; tD[d.id] += n; totalAll += n;
+            });
+        });
+    });
+    return { totalAll, tV, tD };
+}
+
+/* ============================================================
+   EKSPOR XLSX
+   ============================================================ */
+function exportXLSX() {
+    if (!state.surveyConfig || !state.intervals) {
+        showModalInfo('Tidak Ada Data', 'Belum ada data survei untuk diekspor.');
+        return;
+    }
+    try {
+        const c = state.surveyConfig;
+        const intervals = state.intervals;
+        const { totalAll, tV, tD } = computeTotals();
+
+        // Styles
+        const styles = [
+            { font: { bold: false, size: 11, color: '000000' }, align: 'left' },
+            { font: { bold: true, size: 12, color: 'FFFFFF' }, fill: { color: '0066CC' }, align: 'center' },
+            { font: { bold: true, size: 11, color: 'FFFFFF' }, fill: { color: '00AACC' }, align: 'center' },
+            { font: { bold: true, size: 11, color: '0066CC' }, fill: { color: 'E0F0FF' }, align: 'center' },
+            { font: { bold: false, size: 11, color: '000000' }, align: 'center' },
+            { font: { bold: true, size: 11, color: '333333' }, align: 'left' },
+            { font: { bold: true, size: 14, color: '0066CC' }, align: 'left' },
+            { font: { bold: false, size: 11, color: '666666' }, align: 'left' }
+        ];
+        const S = { DEF: 0, HEADER: 1, SUB: 2, TOTAL: 3, NUM: 4, LABEL: 5, TITLE: 6, DIM: 7 };
+
+        // === Sheet 1: Identitas Survei ===
+        const s1 = [];
+        s1.push([{ v: 'IDENTITAS SURVEI', s: S.TITLE, t: 's' }, null]);
+        s1.push([]);
+        const identity = [
+            ['Nama Survei', c.nama],
+            ['Lokasi', c.lokasi],
+            ['Tanggal', c.tanggal],
+            ['Jam Mulai', c.jamMulai],
+            ['Jam Selesai', c.jamSelesai],
+            ['Interval Pengamatan', c.intervalMinutes + ' menit'],
+            ['Durasi Survei', formatDuration(parseTimeToMinutes(c.jamSelesai) - parseTimeToMinutes(c.jamMulai))],
+            ['Nama Surveyor', c.surveyor]
+        ];
+        if (c.keterangan) identity.push(['Keterangan', c.keterangan]);
+        identity.forEach(([l, v]) => {
+            s1.push([{ v: l, s: S.LABEL, t: 's' }, { v: String(v || ''), s: S.DEF, t: 's' }]);
+        });
+        s1.push([]);
+        s1.push([{ v: 'TOTAL KENDARAAN', s: S.TOTAL, t: 's' }, { v: totalAll, s: S.TOTAL, t: 'n' }]);
+
+        // === Sheet 2: Data Interval ===
+        const s2 = [];
+        s2.push([
+            { v: 'Tanggal', s: S.HEADER, t: 's' },
+            { v: 'Waktu Mulai', s: S.HEADER, t: 's' },
+            { v: 'Waktu Selesai', s: S.HEADER, t: 's' },
+            { v: 'Jenis Kendaraan', s: S.HEADER, t: 's' },
+            { v: 'Lurus', s: S.HEADER, t: 's' },
+            { v: 'Kanan', s: S.HEADER, t: 's' },
+            { v: 'Kiri', s: S.HEADER, t: 's' },
+            { v: 'Total', s: S.HEADER, t: 's' },
+            { v: 'Status Pencatatan', s: S.HEADER, t: 's' }
+        ]);
+        intervals.forEach(iv => {
+            const st = new Date(iv.startTime);
+            const en = iv.actualEndTime ? new Date(iv.actualEndTime) : new Date(iv.endTime);
+            const startStr = formatTimeShort(st);
+            const endStr = formatTimeShort(en);
+            const status = iv.status === 'completed' ? 'Selesai' : iv.status === 'skipped' ? 'Terlewat' : 'Aktif';
+            VEHICLES.forEach(v => {
+                const lurus = (iv.counts[v.id] && iv.counts[v.id].lurus) || 0;
+                const kanan = (iv.counts[v.id] && iv.counts[v.id].kanan) || 0;
+                const kiri = (iv.counts[v.id] && iv.counts[v.id].kiri) || 0;
+                const tot = lurus + kanan + kiri;
+                s2.push([
+                    { v: c.tanggal, s: S.DEF, t: 's' },
+                    { v: startStr, s: S.NUM, t: 's' },
+                    { v: endStr, s: S.NUM, t: 's' },
+                    { v: v.label, s: S.DEF, t: 's' },
+                    { v: lurus, s: S.NUM, t: 'n' },
+                    { v: kanan, s: S.NUM, t: 'n' },
+                    { v: kiri, s: S.NUM, t: 'n' },
+                    { v: tot, s: S.NUM, t: 'n' },
+                    { v: status, s: S.DEF, t: 's' }
+                ]);
+            });
+        });
+        s2.push([
+            { v: 'TOTAL', s: S.TOTAL, t: 's' },
+            { v: '', s: S.TOTAL, t: 's' },
+            { v: '', s: S.TOTAL, t: 's' },
+            { v: '', s: S.TOTAL, t: 's' },
+            { v: tD.lurus, s: S.TOTAL, t: 'n' },
+            { v: tD.kanan, s: S.TOTAL, t: 'n' },
+            { v: tD.kiri, s: S.TOTAL, t: 'n' },
+            { v: totalAll, s: S.TOTAL, t: 'n' },
+            { v: '', s: S.TOTAL, t: 's' }
+        ]);
+
+        // === Sheet 3: Rekap Jenis Kendaraan ===
+        const s3 = [];
+        s3.push([
+            { v: 'Jenis Kendaraan', s: S.HEADER, t: 's' },
+            { v: 'Total Lurus', s: S.HEADER, t: 's' },
+            { v: 'Total Kanan', s: S.HEADER, t: 's' },
+            { v: 'Total Kiri', s: S.HEADER, t: 's' },
+            { v: 'Total Seluruhnya', s: S.HEADER, t: 's' }
+        ]);
+        VEHICLES.forEach(v => {
+            let lurus = 0, kanan = 0, kiri = 0;
+            intervals.forEach(iv => {
+                lurus += (iv.counts[v.id] && iv.counts[v.id].lurus) || 0;
+                kanan += (iv.counts[v.id] && iv.counts[v.id].kanan) || 0;
+                kiri += (iv.counts[v.id] && iv.counts[v.id].kiri) || 0;
+            });
+            s3.push([
+                { v: v.label, s: S.DEF, t: 's' },
+                { v: lurus, s: S.NUM, t: 'n' },
+                { v: kanan, s: S.NUM, t: 'n' },
+                { v: kiri, s: S.NUM, t: 'n' },
+                { v: lurus + kanan + kiri, s: S.NUM, t: 'n' }
+            ]);
+        });
+        s3.push([
+            { v: 'TOTAL', s: S.TOTAL, t: 's' },
+            { v: tD.lurus, s: S.TOTAL, t: 'n' },
+            { v: tD.kanan, s: S.TOTAL, t: 'n' },
+            { v: tD.kiri, s: S.TOTAL, t: 'n' },
+            { v: totalAll, s: S.TOTAL, t: 'n' }
+        ]);
+
+        // === Sheet 4: Rekap Pergerakan ===
+        const s4 = [];
+        s4.push([
+            { v: 'Interval / Periode', s: S.HEADER, t: 's' },
+            { v: 'Total Lurus', s: S.HEADER, t: 's' },
+            { v: 'Total Kanan', s: S.HEADER, t: 's' },
+            { v: 'Total Kiri', s: S.HEADER, t: 's' },
+            { v: 'Total Seluruhnya', s: S.HEADER, t: 's' }
+        ]);
+        intervals.forEach(iv => {
+            const st = new Date(iv.startTime);
+            const en = iv.actualEndTime ? new Date(iv.actualEndTime) : new Date(iv.endTime);
+            const periode = formatTimeShort(st) + ' – ' + formatTimeShort(en);
+            let lurus = 0, kanan = 0, kiri = 0;
+            VEHICLES.forEach(v => {
+                lurus += (iv.counts[v.id] && iv.counts[v.id].lurus) || 0;
+                kanan += (iv.counts[v.id] && iv.counts[v.id].kanan) || 0;
+                kiri += (iv.counts[v.id] && iv.counts[v.id].kiri) || 0;
+            });
+            s4.push([
+                { v: periode, s: S.DEF, t: 's' },
+                { v: lurus, s: S.NUM, t: 'n' },
+                { v: kanan, s: S.NUM, t: 'n' },
+                { v: kiri, s: S.NUM, t: 'n' },
+                { v: lurus + kanan + kiri, s: S.NUM, t: 'n' }
+            ]);
+        });
+        s4.push([
+            { v: 'TOTAL', s: S.TOTAL, t: 's' },
+            { v: tD.lurus, s: S.TOTAL, t: 'n' },
+            { v: tD.kanan, s: S.TOTAL, t: 'n' },
+            { v: tD.kiri, s: S.TOTAL, t: 'n' },
+            { v: totalAll, s: S.TOTAL, t: 'n' }
+        ]);
+
+        const sheets = [
+            { name: 'Identitas Survei', rows: s1, cols: [25, 40] },
+            { name: 'Data Interval', rows: s2, cols: [12, 12, 12, 18, 8, 8, 8, 8, 16] },
+            { name: 'Rekap Jenis Kendaraan', rows: s3, cols: [22, 12, 12, 12, 16] },
+            { name: 'Rekap Pergerakan', rows: s4, cols: [22, 12, 12, 12, 16] }
+        ];
+
+        const zipData = XLSXBuilder.build(sheets, styles);
+        const blob = new Blob([zipData], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        downloadBlob(blob, getBaseFilename() + '.xlsx');
+        showToast('File XLSX berhasil diekspor');
+    } catch (e) {
+        console.error(e);
+        showModalInfo('Gagal Ekspor', 'Terjadi kesalahan: ' + e.message);
+    }
+}
+
+/* ============================================================
+   EKSPOR CSV UTF-8 (dengan BOM)
+   ============================================================ */
+function csvEscape(v) {
+    if (v === null || v === undefined) return '';
+    const s = String(v);
+    if (s.indexOf(',') !== -1 || s.indexOf('"') !== -1 || s.indexOf('\n') !== -1 || s.indexOf('\r') !== -1) {
+        return '"' + s.replace(/"/g, '""') + '"';
+    }
+    return s;
+}
+function buildCSV(rows) {
+    return rows.map(r => r.map(csvEscape).join(',')).join('\r\n');
+}
+function downloadCSV(rows, suffix) {
+    const csv = buildCSV(rows);
+    // BOM UTF-8
+    const bom = new Uint8Array([0xEF, 0xBB, 0xBF]);
+    const data = MiniZip.strToU8(csv);
+    const blob = new Blob([bom, data], { type: 'text/csv;charset=utf-8' });
+    downloadBlob(blob, getBaseFilename() + '_' + suffix + '.csv');
+}
+function exportCSVInterval() {
+    if (!state.surveyConfig) { showModalInfo('Tidak Ada Data', 'Belum ada data.'); return; }
+    const c = state.surveyConfig;
+    const rows = [['Tanggal', 'Waktu Mulai', 'Waktu Selesai', 'Jenis Kendaraan', 'Lurus', 'Kanan', 'Kiri', 'Total', 'Status Pencatatan']];
+    state.intervals.forEach(iv => {
+        const st = new Date(iv.startTime);
+        const en = iv.actualEndTime ? new Date(iv.actualEndTime) : new Date(iv.endTime);
+        const status = iv.status === 'completed' ? 'Selesai' : iv.status === 'skipped' ? 'Terlewat' : 'Aktif';
+        VEHICLES.forEach(v => {
+            const lurus = (iv.counts[v.id] && iv.counts[v.id].lurus) || 0;
+            const kanan = (iv.counts[v.id] && iv.counts[v.id].kanan) || 0;
+            const kiri = (iv.counts[v.id] && iv.counts[v.id].kiri) || 0;
+            rows.push([c.tanggal, formatTimeShort(st), formatTimeShort(en), v.label, lurus, kanan, kiri, lurus + kanan + kiri, status]);
+        });
+    });
+    const { totalAll, tD } = computeTotals();
+    rows.push(['TOTAL', '', '', '', tD.lurus, tD.kanan, tD.kiri, totalAll, '']);
+    downloadCSV(rows, 'Data_Interval');
+    showToast('CSV Data Interval diekspor');
+}
+function exportCSVVehicle() {
+    if (!state.surveyConfig) { showModalInfo('Tidak Ada Data', 'Belum ada data.'); return; }
+    const { totalAll, tV, tD } = computeTotals();
+    const rows = [['Jenis Kendaraan', 'Total Lurus', 'Total Kanan', 'Total Kiri', 'Total Seluruhnya']];
+    VEHICLES.forEach(v => {
+        let lurus = 0, kanan = 0, kiri = 0;
+        state.intervals.forEach(iv => {
+            lurus += (iv.counts[v.id] && iv.counts[v.id].lurus) || 0;
+            kanan += (iv.counts[v.id] && iv.counts[v.id].kanan) || 0;
+            kiri += (iv.counts[v.id] && iv.counts[v.id].kiri) || 0;
+        });
+        rows.push([v.label, lurus, kanan, kiri, lurus + kanan + kiri]);
+    });
+    rows.push(['TOTAL', tD.lurus, tD.kanan, tD.kiri, totalAll]);
+    downloadCSV(rows, 'Rekap_Jenis_Kendaraan');
+    showToast('CSV Rekap Jenis Kendaraan diekspor');
+}
+function exportCSVDirection() {
+    if (!state.surveyConfig) { showModalInfo('Tidak Ada Data', 'Belum ada data.'); return; }
+    const { totalAll, tD } = computeTotals();
+    const rows = [['Interval / Periode', 'Total Lurus', 'Total Kanan', 'Total Kiri', 'Total Seluruhnya']];
+    state.intervals.forEach(iv => {
+        const st = new Date(iv.startTime);
+        const en = iv.actualEndTime ? new Date(iv.actualEndTime) : new Date(iv.endTime);
+        const periode = formatTimeShort(st) + ' – ' + formatTimeShort(en);
+        let lurus = 0, kanan = 0, kiri = 0;
+        VEHICLES.forEach(v => {
+            lurus += (iv.counts[v.id] && iv.counts[v.id].lurus) || 0;
+            kanan += (iv.counts[v.id] && iv.counts[v.id].kanan) || 0;
+            kiri += (iv.counts[v.id] && iv.counts[v.id].kiri) || 0;
+        });
+        rows.push([periode, lurus, kanan, kiri, lurus + kanan + kiri]);
+    });
+    rows.push(['TOTAL', tD.lurus, tD.kanan, tD.kiri, totalAll]);
+    downloadCSV(rows, 'Rekap_Arah_Pergerakan');
+    showToast('CSV Rekap Arah Pergerakan diekspor');
+}
+function exportCSVIdentity() {
+    if (!state.surveyConfig) { showModalInfo('Tidak Ada Data', 'Belum ada data.'); return; }
+    const c = state.surveyConfig;
+    const { totalAll } = computeTotals();
+    const durasi = parseTimeToMinutes(c.jamSelesai) - parseTimeToMinutes(c.jamMulai);
+    const rows = [['Field', 'Nilai']];
+    rows.push(['Nama Survei', c.nama]);
+    rows.push(['Lokasi', c.lokasi]);
+    rows.push(['Tanggal', c.tanggal]);
+    rows.push(['Jam Mulai', c.jamMulai]);
+    rows.push(['Jam Selesai', c.jamSelesai]);
+    rows.push(['Interval Pengamatan', c.intervalMinutes + ' menit']);
+    rows.push(['Durasi Survei', formatDuration(durasi)]);
+    rows.push(['Nama Surveyor', c.surveyor]);
+    rows.push(['Keterangan', c.keterangan || '']);
+    rows.push(['Total Kendaraan', totalAll]);
+    downloadCSV(rows, 'Identitas_Survei');
+    showToast('CSV Identitas Survei diekspor');
+}
+
+/* ============================================================
+   EKSPOR / IMPOR JSON
+   ============================================================ */
+function exportJSON() {
+    if (!state.surveyConfig) { showModalInfo('Tidak Ada Data', 'Belum ada data survei.'); return; }
+    const backup = {
+        version: 1,
+        exportedAt: new Date().toISOString(),
+        surveyConfig: state.surveyConfig,
+        intervals: state.intervals,
+        activeIntervalIndex: state.activeIntervalIndex,
+        activeVehicle: state.activeVehicle,
+        undoStack: state.undoStack,
+        isPaused: state.isPaused,
+        audioEnabled: state.audioEnabled
+    };
+    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+    downloadBlob(blob, 'traffic_counting_backup_' + getLocalDateStr(new Date()) + '.json');
+    showToast('Backup JSON diekspor');
+}
+function importJSON(file) {
+    const reader = new FileReader();
+    reader.onload = e => {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (!data.surveyConfig || !data.intervals) throw new Error('Format tidak valid');
+            showModalConfirm('Impor Data', 'Data survei saat ini akan digantikan. Lanjutkan?', async () => {
+                state.surveyConfig = data.surveyConfig;
+                state.intervals = data.intervals;
+                state.activeIntervalIndex = data.activeIntervalIndex || 0;
+                state.activeVehicle = data.activeVehicle || 'motor';
+                state.undoStack = data.undoStack || [];
+                state.isPaused = data.isPaused || false;
+                state.audioEnabled = data.audioEnabled !== undefined ? data.audioEnabled : true;
+                state.surveyActive = true;
+                await saveConfig(state.surveyConfig);
+                await saveSurveyData();
+                buildVehicleButtons(); buildDirectionButtons();
+                selectVehicle(state.activeVehicle);
+                updateCountingUI(); updateHeaderInfo();
+                if (!state.isPaused) startTimers();
+                showScreen('screen-counting');
+                showToast('Data diimpor');
+            });
+        } catch (err) {
+            showModalInfo('Gagal Impor', 'File JSON tidak valid: ' + err.message);
+        }
+    };
+    reader.readAsText(file);
+}
+
+/* ============================================================
+   MODAL
+   ============================================================ */
+function showModalConfirm(title, msg, onConfirm) {
+    $('#modalTitle').textContent = title;
+    $('#modalMessage').textContent = msg;
+    $('#modalConfirm').classList.add('active');
+    const cb = $('#modalBtnConfirm'), cc = $('#modalBtnCancel');
+    const ncb = cb.cloneNode(true), ncc = cc.cloneNode(true);
+    cb.parentNode.replaceChild(ncb, cb);
+    cc.parentNode.replaceChild(ncc, cc);
+    ncb.addEventListener('click', () => { $('#modalConfirm').classList.remove('active'); if (onConfirm) onConfirm(); });
+    ncc.addEventListener('click', () => $('#modalConfirm').classList.remove('active'));
+}
+function showModalInfo(title, msg) {
+    $('#modalInfoTitle').textContent = title;
+    $('#modalInfoMessage').textContent = msg;
+    $('#modalInfo').classList.add('active');
+    const ok = $('#modalInfoBtnOk');
+    const nok = ok.cloneNode(true);
+    ok.parentNode.replaceChild(nok, ok);
+    nok.addEventListener('click', () => $('#modalInfo').classList.remove('active'));
+}
+
+/* ============================================================
+   EVENT LISTENERS
+   ============================================================ */
+function setupEventListeners() {
+    $('#inputTanggal').value = getLocalDateStr(new Date());
+
+    $('#inputInterval').addEventListener('change', function() {
+        if (this.value === 'custom') $('#groupIntervalCustom').classList.remove('hidden');
+        else $('#groupIntervalCustom').classList.add('hidden');
+        updateSummary();
+    });
+    ['inputTanggal','inputJamMulai','inputJamSelesai','inputInterval','inputIntervalCustom'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) { el.addEventListener('input', updateSummary); el.addEventListener('change', updateSummary); }
+    });
+
+    $('#btnMulaiSurvei').addEventListener('click', async () => {
+        const err = validateSetup();
+        if (err) { $('#setupError').textContent = err; playErrorSound(); return; }
+        $('#setupError').textContent = '';
+        const existing = await loadSurveyData();
+        if (existing && existing.intervals && existing.intervals.length > 0) {
+            $('#existingSurveyActions').classList.remove('hidden');
+            showModalInfo('Survei Aktif Ditemukan', 'Sudah ada survei tersimpan. Gunakan "Lanjutkan Survei Aktif" atau "Hapus Survei Lama".');
+            return;
+        }
+        await startSurvey(buildConfigFromForm());
+    });
+
+    $('#btnLanjutkanSurvei').addEventListener('click', async () => {
+        const data = await loadSurveyData();
+        if (data && data.config) {
+            state.surveyConfig = data.config;
+            state.intervals = data.intervals || [];
+            state.activeIntervalIndex = data.activeIntervalIndex || 0;
+            state.activeVehicle = data.activeVehicle || 'motor';
+            state.undoStack = data.undoStack || [];
+            state.isPaused = data.isPaused || false;
+            state.audioEnabled = data.audioEnabled !== undefined ? data.audioEnabled : true;
+            state.surveyActive = true;
+            buildVehicleButtons(); buildDirectionButtons();
+            selectVehicle(state.activeVehicle);
+            updateCountingUI(); updateHeaderInfo();
+            if (!state.isPaused) startTimers();
+            showScreen('screen-counting');
+            showToast('Survei dilanjutkan');
+        } else showModalInfo('Gagal', 'Data tidak ditemukan.');
+    });
+
+    $('#btnHapusSurveiLama').addEventListener('click', () => {
+        showModalConfirm('Hapus Survei Lama', 'Semua data survei tersimpan akan dihapus permanen. Lanjutkan?', async () => {
+            await deleteSurveyData();
+            state.surveyConfig = null;
+            state.intervals = [];
+            state.undoStack = [];
+            state.surveyActive = false;
+            $('#existingSurveyActions').classList.add('hidden');
+            showToast('Data survei lama dihapus');
+        });
+    });
+
+    $('#btnKeLaporanDariSetup').addEventListener('click', () => { renderReport(); showScreen('screen-report'); });
+
+    $('#btnUndo').addEventListener('click', undoLastInput);
+    $('#btnGantiInterval').addEventListener('click', () => {
+        showModalConfirm('Ganti Interval', 'Interval akan diganti sekarang. Data interval saat ini disimpan. Lanjutkan?', manualAdvanceInterval);
+    });
+    $('#btnToggleAudio').addEventListener('click', function() {
+        state.audioEnabled = !state.audioEnabled;
+        this.textContent = state.audioEnabled ? '🔊 AUDIO' : '🔇 AUDIO';
+        this.classList.toggle('btn-outline', state.audioEnabled);
+        this.classList.toggle('btn-danger', !state.audioEnabled);
+        showToast(state.audioEnabled ? 'Audio aktif' : 'Audio nonaktif');
+        saveSurveyData();
+    });
+    $('#btnJeda').addEventListener('click', () => { state.isPaused ? resumeSurvey() : pauseSurvey(); });
+    $('#btnLaporan').addEventListener('click', () => { renderReport(); showScreen('screen-report'); });
+    $('#btnKeluar').addEventListener('click', () => {
+        showModalConfirm('Kembali ke Pengaturan', 'Data survei tetap tersimpan. Kembali?', () => {
+            stopTimers();
+            showScreen('screen-setup');
+            if (state.surveyConfig) fillFormFromConfig(state.surveyConfig);
+            $('#existingSurveyActions').classList.remove('hidden');
+        });
+    });
+
+    $('#btnKembaliDariLaporan').addEventListener('click', () => {
+        if (state.surveyActive) showScreen('screen-counting');
+        else showScreen('screen-setup');
+    });
+    $('#btnEksporXLSX').addEventListener('click', exportXLSX);
+
+    // Menu CSV
+    $('#btnEksporCSVMenu').addEventListener('click', e => {
+        e.stopPropagation();
+        $('#csvMenu').classList.toggle('active');
+    });
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.export-wrap')) $('#csvMenu').classList.remove('active');
+    });
+    $$('#csvMenu button').forEach(b => {
+        b.addEventListener('click', () => {
+            $('#csvMenu').classList.remove('active');
+            const type = b.dataset.csv;
+            if (type === 'interval') exportCSVInterval();
+            else if (type === 'vehicle') exportCSVVehicle();
+            else if (type === 'direction') exportCSVDirection();
+            else if (type === 'identity') exportCSVIdentity();
+        });
+    });
+
+    $('#btnEksporJSON').addEventListener('click', exportJSON);
+    $('#btnImporJSON').addEventListener('click', () => $('#fileInputJSON').click());
+    $('#fileInputJSON').addEventListener('change', e => {
+        if (e.target.files && e.target.files[0]) { importJSON(e.target.files[0]); e.target.value = ''; }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', e => {
+        if (!state.surveyActive) return;
+        if (!$('#screen-counting').classList.contains('active')) return;
+        if (e.key >= '1' && e.key <= '6') {
+            const idx = parseInt(e.key) - 1;
+            if (idx < VEHICLES.length) { selectVehicle(VEHICLES[idx].id); e.preventDefault(); }
+        }
+        if (e.key === 'ArrowUp') { recordCount('lurus'); e.preventDefault(); }
+        if (e.key === 'ArrowRight') { recordCount('kanan'); e.preventDefault(); }
+        if (e.key === 'ArrowLeft') { recordCount('kiri'); e.preventDefault(); }
+        if (e.ctrlKey && e.key === 'z') { undoLastInput(); e.preventDefault(); }
+    });
+
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', () => setTimeout(checkOrientation, 300));
+
+    window.addEventListener('beforeunload', () => {
+        if (state.surveyActive && state.intervals && state.intervals.length) {
+            try {
+                const data = {
+                    key: 'surveyData',
+                    config: state.surveyConfig,
+                    intervals: state.intervals,
+                    activeIntervalIndex: state.activeIntervalIndex,
+                    activeVehicle: state.activeVehicle,
+                    undoStack: state.undoStack.slice(-50),
+                    isPaused: state.isPaused,
+                    audioEnabled: state.audioEnabled,
+                    timestamp: Date.now()
+                };
+                localStorage.setItem(STORAGE_KEYS.SURVEY_DATA, JSON.stringify(data));
+            } catch (e) {}
+        }
+    });
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+async function initApp() {
+    try {
+        state.db = await openDB();
+        state.storageMode = 'indexedDB';
+    } catch (e) {
+        state.storageMode = 'localStorage';
+        state.db = null;
+    }
+
+    const savedConfig = await loadConfig();
+    if (savedConfig) fillFormFromConfig(savedConfig);
+    else {
+        $('#inputTanggal').value = getLocalDateStr(new Date());
+        $('#inputJamMulai').value = '07:00';
+        $('#inputJamSelesai').value = '09:00';
+        $('#inputInterval').value = '5';
+    }
+
+    const savedData = await loadSurveyData();
+    if (savedData && savedData.config) {
+        $('#existingSurveyActions').classList.remove('hidden');
+        fillFormFromConfig(savedData.config);
+    }
+
+    setupEventListeners();
+    buildVehicleButtons();
+    buildDirectionButtons();
+    if (!$('#inputTanggal').value) $('#inputTanggal').value = getLocalDateStr(new Date());
+    updateSummary();
+    showScreen('screen-setup');
+
+    if (savedData && savedData.config && savedData.intervals && savedData.intervals.length > 0) {
+        setTimeout(() => {
+            showModalInfo('Survei Tersimpan', 'Ditemukan data survei tersimpan. Klik "Lanjutkan Survei Aktif" untuk melanjutkan.');
+        }, 500);
+    }
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initApp);
+else initApp();
+
+})();
+</script>
+</body>
+</html>
